@@ -14,7 +14,7 @@ interface Options {
   absoluteImports: boolean;
   relativeImports: boolean;
   flatten: boolean;
-  ignore: never[];
+  ignore: string[];
   absolute: boolean;
 }
 
@@ -79,11 +79,9 @@ export async function findImports(
     absolute: absolute,
     onlyFiles: true,
   });
-
   filePaths.forEach(function (filepath) {
     let modulePath: string = "";
     try {
-      // var result = babel.transformFileSync(filepath, babelOptions);
       const tree = parser.parse(fs.readFileSync(filepath).toString());
       modulePath = path.relative(cwd, filepath);
 
@@ -95,27 +93,31 @@ export async function findImports(
           node.expression.type === "CallExpression" &&
           node.expression.callee.type === "MemberExpression" &&
           node.expression.callee.object.type === "CallExpression" &&
+          // @ts-ignore
           node.expression.callee.object.callee.name === "require"
         ) {
           addModule(
             requiredModules as Record<string, string[]>,
             options,
             modulePath,
+            // @ts-ignore
             node.expression.callee.object.arguments[0].value
           );
           return;
         }
 
         if (
-          node.type === "ExpressionStatement" &&
-          node.expression.type === "CallExpression" &&
+          node.type === parser.AST_NODE_TYPES.ExpressionStatement &&
+          node.expression.type === parser.AST_NODE_TYPES.CallExpression &&
+          // @ts-ignore
           node.expression.callee.name === "require"
         ) {
           addModule(
             requiredModules as Record<string, string[]>,
             options,
             modulePath,
-            node.expression.arguments[0].value
+            // @ts-ignore
+            node.expression.arguments[0].value as unknown as string
           );
           return;
         }
@@ -153,8 +155,19 @@ export async function findImports(
             requiredModules as Record<string, string[]>,
             options,
             modulePath,
-            (node as unknown as parser.AST_NODE_TYPES.ImportDeclaration).source
+            // @ts-ignore
+            node.source
               .value
+          );
+          return;
+        }
+        if (node.type === "ExportAllDeclaration") {
+          addModule(
+            requiredModules as Record<string, string[]>,
+            options,
+            modulePath,
+            // @ts-ignore
+            node.source.value
           );
           return;
         }
@@ -167,6 +180,5 @@ export async function findImports(
   if (options.flatten) {
     requiredModules = _uniq(_flatten(_values(requiredModules)));
   }
-
   return requiredModules;
 }

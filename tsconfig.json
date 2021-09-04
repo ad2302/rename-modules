@@ -8,7 +8,7 @@
     "module": "ESNext",
     "sourceMap": false,
     "rootDir": "src",
-    "strict": true,
+    "strict": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
@@ -17,5 +17,6 @@
     "target": "es2018",
     "typeRoots": ["types"]
   },
+  "include": ["fixtures"],
   "exclude": ["rollup.config.ts", "dist"]
 }
