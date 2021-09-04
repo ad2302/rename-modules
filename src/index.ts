@@ -1,1 +1,1 @@
-﻿export { compress } from "./compressor";
+﻿
