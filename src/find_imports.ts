@@ -8,13 +8,52 @@ import _uniq from "lodash.uniq";
 import _flatten from "lodash.flatten";
 import parser from "@typescript-eslint/typescript-estree";
 import glob from "fast-glob";
-// import resolveGlob from "./resolve-glob";
+
+interface Options {
+  packageImports: boolean;
+  absoluteImports: boolean;
+  relativeImports: boolean;
+  flatten: boolean;
+  ignore: never[];
+  absolute: boolean;
+}
 
 const defaultOptions = {
-    packageImports: true,
-    absoluteImports: false,
-    relativeImports: false
+  packageImports: true,
+  absoluteImports: false,
+  relativeImports: false,
+  ignore: [],
+  flatten: true,
+  absolute: false,
 };
+
+function isRequireExpression(o: parser.TSESTree.BaseNode | null): boolean {
+  return (
+    _get(o, "type") === "CallExpression" &&
+    _get(o, "callee.type") === "Identifier" &&
+    _get(o, "callee.name") === "require" &&
+    _get(o, "arguments[0].type") === "Literal"
+  );
+}
+
+function addModule(
+  records: Record<string, string[]>,
+  options: Partial<Options>,
+  modulePath: string,
+  value: string
+) {
+  if (value[0] === "/") {
+    if (!!options.absoluteImports) {
+      records[modulePath].push(value);
+    }
+  } else if (value[0] === ".") {
+    if (!!options.relativeImports) {
+      records[modulePath].push(value);
+    }
+  } else if (!!options.packageImports) {
+    records[modulePath].push(value);
+  }
+}
 
 // @params {string|array} patterns The glob pattern or a list of glob patterns.
 // @params {object} options The options object.
@@ -22,116 +61,115 @@ const defaultOptions = {
 // @params {boolean} [options.packageImports] True to return package imports, defaults to true.
 // @params {boolean} [options.absoluteImports] True to return absolute imports, defaults to false.
 // @params {boolean} [options.relativeImports] True to return relative imports, defaults to false.
-export function findImports (patterns:string|string[], options: typeof defaultOptions, _cwd:string) {
-    var cwd = _cwd ? _cwd : process.cwd();
-    var requiredModules = {};
-    var filepaths = [];
-    var addModule = function(modulePath:string, value:string) {
-        if (value[0] === '/') {
-            if (!!options.absoluteImports) {
-                requiredModules[modulePath].push(value);
-            }
-        } else if (value[0] === '.') {
-            if (!!options.relativeImports) {
-                requiredModules[modulePath].push(value);
-            }
-        } else if (!!options.packageImports) {
-            requiredModules[modulePath].push(value);
-        }
-    };
-    var isRequireExpression = function(o) {
-        return (
-            _get(o, 'type') === 'CallExpression' &&
-            _get(o, 'callee.type') === 'Identifier' &&
-            _get(o, 'callee.name') === 'require' &&
-            _get(o, 'arguments[0].type') === 'Literal'
-        );
-    };
+export async function findImports(
+  patterns: string | string[] = [],
+  options: Partial<Options> = defaultOptions,
+  cwd: string = process.cwd()
+) {
+  let requiredModules: Record<string, string[]> | string[] = {};
 
-    // options
-    options = Object.assign({}, defaultOptions, options || {});
-    var ignore = options.ignore || []
-    var absolute = options.absolute || false
-    { // glob patterns
-        var positives = [];
-        var negatives = [];
+  // options
+  const _options = Object.assign({}, defaultOptions, options);
+  const ignore = _options.ignore || [];
+  const absolute = _options.absolute || false;
 
-        patterns = [].concat(patterns || []);
-        patterns.forEach(function(pattern) {
-            // Make a glob pattern absolute
-            pattern = resolveGlob(pattern, {base: cwd});
+  const filePaths = await glob(patterns, {
+    cwd: cwd,
+    ignore: ignore,
+    absolute: absolute,
+  });
 
-            if (pattern.charAt(0) === '!') {
-                negatives = negatives.concat(glob.sync(pattern.slice(1), {base: cwd,ignore:ignore,absolute:absolute}));
-            } else {
-                positives = positives.concat(glob.sync(pattern, {base: cwd,ignore:ignore,absolute:absolute}));
-            }
-        });
-
-        filepaths = _difference(positives, negatives);
+  filePaths.forEach(function (filepath) {
+    var stat = fs.statSync(filepath);
+    if (!stat.isFile()) {
+      return;
     }
+    let modulePath: string = "";
+    try {
+      // var result = babel.transformFileSync(filepath, babelOptions);
+      const tree = parser.parse(fs.readFileSync(filepath).toString());
+      modulePath = path.relative(cwd, filepath);
 
-    filepaths.forEach(function(filepath) {
-        var stat = fs.statSync(filepath);
-        if (!stat.isFile()) {
-            return;
+      (requiredModules as Record<string, string[]>)[modulePath] = [];
+
+      tree.body.forEach(function (node) {
+        if (
+          node.type === "ExpressionStatement" &&
+          node.expression.type === "CallExpression" &&
+          node.expression.callee.type === "MemberExpression" &&
+          node.expression.callee.object.type === "CallExpression" &&
+          node.expression.callee.object.callee.name === "require"
+        ) {
+          addModule(
+            requiredModules as Record<string, string[]>,
+            options,
+            modulePath,
+            node.expression.callee.object.arguments[0].value
+          );
+          return;
         }
 
-        try {
-            // var result = babel.transformFileSync(filepath, babelOptions);
-            var tree = parser.parse(fs.readFileSync(filepath).toString());
-            var modulePath = path.relative(cwd, filepath);
+        if (
+          node.type === "ExpressionStatement" &&
+          node.expression.type === "CallExpression" &&
+          node.expression.callee.name === "require"
+        ) {
+          addModule(
+            requiredModules as Record<string, string[]>,
+            options,
+            modulePath,
+            node.expression.arguments[0].value
+          );
+          return;
+        }
 
-            requiredModules[modulePath] = [];
+        if (node.type === "VariableDeclaration") {
+          node.declarations.forEach(function (decl) {
+            var expr = decl.init;
+            if (isRequireExpression(expr)) {
+              addModule(
+                requiredModules as Record<string, string[]>,
+                options,
+                modulePath,
+                _get(expr, "arguments[0].value")
+              );
+              return;
+            }
 
-            tree.body.forEach(function(node) {
-                if (node.type === 'ExpressionStatement' &&
-                    node.expression.type === 'CallExpression' &&
-                    node.expression.callee.type === 'MemberExpression' &&
-                    node.expression.callee.object.type === 'CallExpression' &&
-                    node.expression.callee.object.callee.name === 'require') {
-                    addModule(modulePath, node.expression.callee.object.arguments[0].value);
-                    return;
-                }
-
-                if (node.type === 'ExpressionStatement' &&
-                    node.expression.type === 'CallExpression' &&
-                    node.expression.callee.name === 'require') {
-                    addModule(modulePath, node.expression.arguments[0].value);
-                    return;
-                }
-
-                if (node.type === 'VariableDeclaration') {
-                    node.declarations.forEach(function(decl) {
-                        var expr = decl.init;
-                        if (isRequireExpression(expr)) {
-                            addModule(modulePath, _get(expr, 'arguments[0].value'));
-                            return;
-                        }
-
-                        var exprArguments = ensureArray(_get(decl, 'init.arguments'));
-                        exprArguments.forEach(function(exprArgument) {
-                            if (isRequireExpression(exprArgument)) {
-                                addModule(modulePath, _get(exprArgument, 'arguments[0].value'));
-                            }
-                        });
-                    });
-                    return;
-                }
-
-                if (node.type === 'ImportDeclaration') {
-                    addModule(modulePath, node.source.value);
-                    return;
-                }
+            var exprArguments = ensureArray(_get(decl, "init.arguments"));
+            exprArguments.forEach(function (exprArgument) {
+              if (isRequireExpression(exprArgument)) {
+                addModule(
+                  requiredModules as Record<string, string[]>,
+                  options,
+                  modulePath,
+                  _get(exprArgument, "arguments[0].value")
+                );
+              }
             });
-        } catch (e) {
-            console.error('Error in `' + modulePath + '`: ' + e);
+          });
+          return;
         }
-    });
 
-    if (options.flatten) {
-        requiredModules = _uniq(_flatten(_values(requiredModules)));
+        if (node.type === "ImportDeclaration") {
+          addModule(
+            requiredModules as Record<string, string[]>,
+            options,
+            modulePath,
+            (node as unknown as parser.AST_NODE_TYPES.ImportDeclaration).source
+              .value
+          );
+          return;
+        }
+      });
+    } catch (e) {
+      console.error("Error in `" + modulePath + "`: " + e);
     }
+  });
 
-    return requiredModules;
-};
+  if (options.flatten) {
+    requiredModules = _uniq(_flatten(_values(requiredModules)));
+  }
+
+  return requiredModules;
+}
