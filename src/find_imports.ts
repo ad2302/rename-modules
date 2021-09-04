@@ -77,13 +77,10 @@ export async function findImports(
     cwd: cwd,
     ignore: ignore,
     absolute: absolute,
+    onlyFiles: true,
   });
 
   filePaths.forEach(function (filepath) {
-    var stat = fs.statSync(filepath);
-    if (!stat.isFile()) {
-      return;
-    }
     let modulePath: string = "";
     try {
       // var result = babel.transformFileSync(filepath, babelOptions);
