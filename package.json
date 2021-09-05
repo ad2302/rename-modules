@@ -51,7 +51,7 @@
     "url": "https://github.com/ad2302/rename-modules/issues"
   },
   "scripts": {
-    "test": "tap --node-arg=--loader=ts-node/esm --node-arg=--experimental-specifier-resolution=node  \"tests/**/*.spec.ts\"",
+    "test": "tap --node-arg=--loader=ts-node/esm --node-arg=--no-warnings --node-arg=--experimental-specifier-resolution=node  \"tests/**/*.spec.ts\"",
     "prepublishOnly": "rimraf dist && rollup -c rollup.config.ts"
   },
   "publishConfig": {
