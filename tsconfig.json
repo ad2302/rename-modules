@@ -7,7 +7,6 @@
     "moduleResolution": "Node",
     "module": "ESNext",
     "sourceMap": false,
-    "rootDir": "src",
     "strict": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

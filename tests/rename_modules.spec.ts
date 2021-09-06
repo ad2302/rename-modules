@@ -22,12 +22,15 @@ void test("find imports export all", async (t) => {
   await renameModules("tmp/export_all/*.ts", "snake_case");
   t.ok(await pathExists("tmp/export_all/camel_case_module.ts"));
   const c = await _readFile("tmp/export_all/index.ts", "utf-8");
-  t.ok(c.includes("camel_case_module"),`index.ts includes camel_case_module`);
+  t.ok(c.includes("camel_case_module"), `index.ts includes camel_case_module`);
 });
 
 void test("find imports import one", async (t) => {
   await renameModules("tmp/import_one/*.ts", "snake_case");
   t.ok(await pathExists("tmp/import_one/pascal_case_module.ts"));
   const c = await _readFile("tmp/import_one/index.ts", "utf-8");
-  t.ok(c.includes("pascal_case_module"),`index.ts includes pascal_case_module`);
+  t.ok(
+    c.includes("pascal_case_module"),
+    `index.ts includes pascal_case_module`
+  );
 });

@@ -2,6 +2,7 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import typescript from "rollup-plugin-typescript2";
 import json from "@rollup/plugin-json";
+import autoExternal from 'rollup-plugin-auto-external';
 
 const pkg = require("./package.json");
 
@@ -22,6 +23,7 @@ export default {
     include: "src/**",
   },
   plugins: [
+    autoExternal(),
     // Allow json resolution
     json(),
     // Allow node_modules resolution, so you can use 'external' to control
