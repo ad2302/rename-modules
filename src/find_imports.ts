@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import ensureArray from "ensure-array";
 import _get from "lodash.get";
-import _difference from "lodash.difference";
 import _values from "lodash.values";
 import _uniq from "lodash.uniq";
 import _flatten from "lodash.flatten";
