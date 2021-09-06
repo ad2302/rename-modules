@@ -4,7 +4,7 @@ import { test, beforeEach, afterEach } from "tap";
 import { renameModules } from "../src/rename_modules";
 import rimraf from "rimraf";
 import copyDir from "copy-dir";
-import { pathExists } from "path-exists";
+import pathExists from "path-exists";
 
 const _readFile = promisify(readFile);
 const _rimraf = promisify(rimraf);
