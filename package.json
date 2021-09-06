@@ -8,7 +8,7 @@
   "engines": {
     "node": ">=10"
   },
-  "bin": "./dist/cli",
+  "bin": "./dist/cli.js",
   "files": [
     "dist"
   ],

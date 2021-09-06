@@ -48,7 +48,7 @@ export default [
         format: "cjs",
         sourcemap: false,
       },
-      { file: 'dist/cli.mjs', format: "es", sourcemap: false },
+      // { file: 'dist/cli.mjs', format: "es", sourcemap: false },
     ],
     // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
     external: ['./index'],
