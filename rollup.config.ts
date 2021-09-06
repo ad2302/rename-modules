@@ -44,7 +44,7 @@ export default [
     input: `src/cli.ts`,
     output: [
       {
-        file: 'dist/cli.js',
+        file: 'dist/cli.cjs',
         format: "cjs",
         sourcemap: false,
       },
