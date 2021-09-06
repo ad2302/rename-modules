@@ -16,6 +16,11 @@
     "target": "es2018",
     "typeRoots": ["types"]
   },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  },
   "include": ["fixtures"],
   "exclude": ["rollup.config.ts", "dist"]
 }
