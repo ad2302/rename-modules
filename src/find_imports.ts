@@ -5,7 +5,7 @@ import _get from "lodash.get";
 import _values from "lodash.values";
 import _uniq from "lodash.uniq";
 import _flatten from "lodash.flatten";
-import parser from "@typescript-eslint/typescript-estree";
+import * as parser from "@typescript-eslint/typescript-estree";
 import glob from "fast-glob";
 
 interface Options {
