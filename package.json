@@ -1,9 +1,9 @@
 {
   "name": "@ad2302/rename-modules",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "engines": {
     "node": ">=10"
