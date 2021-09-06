@@ -1,5 +1,9 @@
 # rename-modules
 
+### Installation  
+
+`npm i -g @ad2302/rename-modules`  
+
 ### CLI usage  
 
 ```
