@@ -1,5 +1,5 @@
 import { promisify } from "util";
-import { findImports } from "./find_imports";
+import { findImports } from "@ad2302/find-imports";
 import { changeFileCase } from "./change_case";
 import { rename, readFile, writeFile } from "fs";
 

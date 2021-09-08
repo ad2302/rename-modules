@@ -17,7 +17,15 @@ const plugins = [
   // Allow bundling cjs modules (unlike webpack, rollup doesn't understand cjs)
   commonjs(),
   // Compile TypeScript files
-  typescript(),
+  typescript({tsconfigOverride:{
+    "compilerOptions":{
+      "rootDir": "src",
+      "declaration": true,
+      "types": ["node"] 
+    },
+    include:['src/'],
+    exclude:['tests/','rollup.config.ts','fixtures/']
+  }}),
   // Resolve source maps to the original source
   // sourceMaps(),
 ]
