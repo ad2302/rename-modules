@@ -1,6 +1,6 @@
 {
   "name": "@ad2302/rename-modules",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
