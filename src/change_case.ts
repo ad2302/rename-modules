@@ -4,7 +4,7 @@ import path from "path";
 export function changeFileCase(_path: string, caseStyle: string): string {
   const destStyle = camelize(caseStyle, true);
   const parsed = path.parse(_path);
-  const name = parsed.name.replace(/\W/,'');
+  const name = parsed.name.replace(/\W/g,'');
   const normalize = name.replace(/[A-Z]+/g,(substring: string) => `${substring[0]}${substring.substring(1).toLowerCase()}`)
   delete parsed.base;
   switch (destStyle) {
