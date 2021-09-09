@@ -10,3 +10,13 @@ void test("PascalCase to snake_case", async (t) => {
   const s = "./PascalCaseModule";
   t.equal(changeFileCase(s, "snake_case"), "./pascal_case_module");
 });
+
+void test("PascalCase to snake_case", async (t) => {
+  const s = "./ThirdpartyAPI";
+  t.equal(changeFileCase(s, "snake_case"), "./thirdparty_api");
+});
+
+void test("camelCase to snake_case", async (t) => {
+  const s = "./thirdpartyAPI";
+  t.equal(changeFileCase(s, "snake_case"), "./thirdparty_api");
+});
